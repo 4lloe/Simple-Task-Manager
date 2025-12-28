@@ -1,10 +1,12 @@
 /**
  * API клієнт для взаємодії з бекендом Simple Task Manager
  * Практична робота №5 - Комплексування компонентів
+ * 
+ * Використовує API Gateway для маршрутизації до мікросервісів
  */
 
-// URL бекенду - CORS вже налаштований у FastAPI
-const API_BASE_URL = 'http://127.0.0.1:8000';
+// URL API Gateway - єдина точка входу до мікросервісів
+const API_BASE_URL = 'http://127.0.0.1:8000/api';
 
 export interface TaskFromAPI {
   idTask: number;
@@ -36,7 +38,7 @@ export interface APIResponse {
 }
 
 /**
- * Отримання списку завдань з бекенду
+ * Отримання списку завдань з бекенду (через API Gateway → Task Service)
  */
 export async function fetchTasks(): Promise<TaskFromAPI[]> {
   const response = await fetch(`${API_BASE_URL}/tasks`);
@@ -47,7 +49,7 @@ export async function fetchTasks(): Promise<TaskFromAPI[]> {
 }
 
 /**
- * Отримання списку категорій з бекенду
+ * Отримання списку категорій з бекенду (через API Gateway → Category Service)
  */
 export async function fetchCategories(): Promise<CategoryFromAPI[]> {
   const response = await fetch(`${API_BASE_URL}/categories`);
@@ -58,7 +60,7 @@ export async function fetchCategories(): Promise<CategoryFromAPI[]> {
 }
 
 /**
- * Створення нового завдання
+ * Створення нового завдання (через API Gateway → Task Service)
  */
 export async function createTaskAPI(payload: CreateTaskPayload): Promise<APIResponse> {
   const response = await fetch(`${API_BASE_URL}/tasks`, {
@@ -78,7 +80,7 @@ export async function createTaskAPI(payload: CreateTaskPayload): Promise<APIResp
 }
 
 /**
- * Оновлення статусу завдання
+ * Оновлення статусу завдання (через API Gateway → Task Service)
  */
 export async function updateTaskStatusAPI(taskId: number, newStatus: string): Promise<APIResponse> {
   const response = await fetch(`${API_BASE_URL}/tasks/${taskId}/status?new_status=${newStatus}`, {
@@ -94,11 +96,27 @@ export async function updateTaskStatusAPI(taskId: number, newStatus: string): Pr
 }
 
 /**
- * Перевірка доступності бекенду
+ * Видалення завдання (через API Gateway → Task Service)
+ */
+export async function deleteTaskAPI(taskId: number): Promise<APIResponse> {
+  const response = await fetch(`${API_BASE_URL}/tasks/${taskId}`, {
+    method: 'DELETE',
+  });
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: response.statusText }));
+    throw new Error(error.detail || 'Failed to delete task');
+  }
+  
+  return response.json();
+}
+
+/**
+ * Перевірка доступності бекенду (API Gateway health check)
  */
 export async function checkHealth(): Promise<boolean> {
   try {
-    const response = await fetch(`${API_BASE_URL}/health`);
+    const response = await fetch(`http://127.0.0.1:8000/health`);
     return response.ok;
   } catch {
     return false;

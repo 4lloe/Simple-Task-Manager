@@ -6,6 +6,7 @@ import {
   fetchCategories, 
   createTaskAPI, 
   updateTaskStatusAPI,
+  deleteTaskAPI,
   TaskFromAPI,
   checkHealth 
 } from '@/api/taskApi';
@@ -306,10 +307,23 @@ export const useTaskManager = () => {
   }, [tasks, isBackendAvailable]);
 
   // Видалення завдання
-  const deleteTask = useCallback((taskId: number) => {
-    setTasks(prev => prev.filter(t => t.id !== taskId));
-    toast.info('Завдання видалено');
-  }, []);
+  const deleteTask = useCallback(async (taskId: number) => {
+    if (isBackendAvailable) {
+      try {
+        await deleteTaskAPI(taskId);
+        setTasks(prev => prev.filter(t => t.id !== taskId));
+        toast.success('Завдання видалено з сервера');
+      } catch (error) {
+        console.error('Error deleting task:', error);
+        toast.error('Помилка видалення', {
+          description: error instanceof Error ? error.message : 'Невідома помилка',
+        });
+      }
+    } else {
+      setTasks(prev => prev.filter(t => t.id !== taskId));
+      toast.info('Завдання видалено локально');
+    }
+  }, [isBackendAvailable]);
 
   // Оновлення даних з сервера
   const refreshTasks = useCallback(async () => {
