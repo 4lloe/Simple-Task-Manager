@@ -1,0 +1,19 @@
+# Requirements for Simple Task Manager
+# Практична робота №4 - svc_task_core
+# Студент: Малий Д.Д., КНТ-22-4
+
+# Web Framework
+fastapi>=0.104.0
+
+# ASGI Server
+uvicorn[standard]>=0.24.0
+
+# Data Validation
+pydantic>=2.5.0
+
+# MySQL Database Connector
+mysql-connector-python>=8.2.0
+
+# Optional: для розробки та тестування
+python-multipart>=0.0.6
+httpx>=0.25.0

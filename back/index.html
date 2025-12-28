@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Task Manager - ПЗ №5</title>
+    <style>
+        /* ============================================
+           Simple Task Manager - Web UI
+           Практична робота №5
+           Студент: Малий Д.Д., КНТ-22-4
+           ============================================ */
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+        
+        /* ============================================
+           Стилі форми
+           ============================================ */
+        .task-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .full-width {
+            grid-column: span 2;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #495057;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        
+        /* ============================================
+           Стилі таблиці
+           ============================================ */
+        h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+            color: #555;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            letter-spacing: 0.5px;
+        }
+        
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        /* ============================================
+           Бейджі пріоритетів (кольорова індикація)
+           ============================================ */
+        .badge {
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: 500;
+            color: white;
+            display: inline-block;
+        }
+        
+        .p-High {
+            background-color: #e74c3c;
+        }
+        
+        .p-Medium {
+            background-color: #f1c40f;
+            color: #333;
+        }
+        
+        .p-Low {
+            background-color: #27ae60;
+        }
+        
+        /* Статуси */
+        .s-Pending {
+            color: #f39c12;
+        }
+        
+        .s-In_Progress {
+            color: #3498db;
+        }
+        
+        .s-Completed {
+            color: #27ae60;
+        }
+        
+        /* Кнопки дій */
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .btn-start {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .btn-start:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-complete {
+            background-color: #27ae60;
+            color: white;
+        }
+        
+        .btn-complete:hover {
+            background-color: #1e8449;
+        }
+        
+        .completed-label {
+            color: #27ae60;
+            font-weight: 500;
+        }
+        
+        /* ============================================
+           Повідомлення (toast)
+           ============================================ */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+        
+        .toast.success {
+            background-color: #27ae60;
+        }
+        
+        .toast.error {
+            background-color: #e74c3c;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        /* ============================================
+           Порожній стан
+           ============================================ */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #95a5a6;
+        }
+        
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 15px;
+        }
+        
+        /* ============================================
+           Футер
+           ============================================ */
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #95a5a6;
+            font-size: 0.85em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📋 Simple Task Manager</h1>
+        <p class="subtitle">Практична робота №5 — Комплексування сервісної архітектури<br>
+        Студент: Малий Д.Д., КНТ-22-4</p>
+        
+        <!-- ============================================
+             Форма створення завдання
+             ============================================ -->
+        <div class="task-form">
+            <div class="full-width">
+                <label for="title">Назва завдання *</label>
+                <input type="text" id="title" placeholder="Введіть назву завдання..." required>
+            </div>
+            
+            <div class="full-width">
+                <label for="desc">Опис</label>
+                <textarea id="desc" placeholder="Детальний опис завдання..." rows="2"></textarea>
+            </div>
+            
+            <div>
+                <label for="category">Категорія</label>
+                <select id="category">
+                    <option value="" disabled selected>Оберіть категорію</option>
+                </select>
+            </div>
+            
+            <div>
+                <label for="priority">Пріоритет</label>
+                <select id="priority">
+                    <option value="Low">🟢 Low (Низький)</option>
+                    <option value="Medium" selected>🟡 Medium (Середній)</option>
+                    <option value="High">🔴 High (Високий — Auto Reminder)</option>
+                </select>
+            </div>
+            
+            <div class="full-width">
+                <label for="dueDate">Дедлайн</label>
+                <input type="datetime-local" id="dueDate">
+            </div>
+            
+            <button class="full-width" id="submitBtn" onclick="createTask()">
+                ➕ Додати завдання
+            </button>
+        </div>
+
+        <!-- ============================================
+             Таблиця завдань (дашборд)
+             ============================================ -->
+        <h2>📊 Мої завдання</h2>
+        <table id="tasksTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Назва</th>
+                    <th>Категорія</th>
+                    <th>Пріоритет</th>
+                    <th>Статус</th>
+                    <th>Дедлайн</th>
+                    <th>Дії</th>
+                </tr>
+            </thead>
+            <tbody id="tasksBody">
+                <!-- Завдання завантажуються динамічно -->
+            </tbody>
+        </table>
+        
+        <div class="footer">
+            Simple Task Manager v2.0.0 | СОАПС ПЗ №5 | ХНУРЕ 2025
+        </div>
+    </div>
+
+    <!-- ============================================
+         JavaScript - Логіка взаємодії з API
+         ============================================ -->
+    <script>
+        // Базова URL-адреса API (бекенд на FastAPI)
+        const API_URL = 'http://127.0.0.1:8000';
+
+        /**
+         * Ініціалізація додатку при завантаженні сторінки
+         */
+        async function init() {
+            try {
+                // Завантаження категорій для випадаючого списку
+                const cats = await fetch(`${API_URL}/categories`).then(r => r.json());
+                const catSelect = document.getElementById('category');
+                
+                cats.forEach(c => {
+                    const option = document.createElement('option');
+                    option.value = c.idCategory;
+                    option.textContent = c.CategoryName;
+                    catSelect.appendChild(option);
+                });
+                
+                // Завантаження списку завдань
+                await loadTasks();
+            } catch (error) {
+                showToast('Помилка підключення до сервера!', 'error');
+                console.error('Init error:', error);
+            }
+        }
+
+        /**
+         * Завантаження та відображення списку завдань
+         */
+        async function loadTasks() {
+            try {
+                const tasks = await fetch(`${API_URL}/tasks`).then(r => r.json());
+                const tbody = document.getElementById('tasksBody');
+                tbody.innerHTML = '';
+                
+                if (tasks.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="empty-state">
+                                <div>📭</div>
+                                <p>Завдань поки немає. Створіть перше!</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                tasks.forEach(t => {
+                    const date = t.DueDate 
+                        ? new Date(t.DueDate).toLocaleString('uk-UA') 
+                        : '—';
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><strong>#${t.idTask}</strong></td>
+                        <td>${escapeHtml(t.Title)}</td>
+                        <td>${t.CategoryName || '<em>Без категорії</em>'}</td>
+                        <td><span class="badge p-${t.Priority}">${t.Priority}</span></td>
+                        <td class="s-${t.Status}">${formatStatus(t.Status)}</td>
+                        <td>${date}</td>
+                        <td>${getActionButtons(t.idTask, t.Status)}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                showToast('Помилка завантаження завдань', 'error');
+                console.error('Load tasks error:', error);
+            }
+        }
+
+        /**
+         * Створення нового завдання через POST /tasks
+         */
+        async function createTask() {
+            const title = document.getElementById('title').value.trim();
+            const description = document.getElementById('desc').value.trim();
+            const category = document.getElementById('category').value;
+            const priority = document.getElementById('priority').value;
+            const dueDate = document.getElementById('dueDate').value;
+            
+            // Валідація на клієнті
+            if (!title || title.length < 3) {
+                showToast('Назва завдання має бути не менше 3 символів!', 'error');
+                return;
+            }
+            
+            // Формування JSON-об'єкта для API
+            const payload = {
+                user_id: 1, // Хардкод для тестування (заглушка)
+                title: title,
+                description: description,
+                category_id: category ? parseInt(category) : null,
+                priority: priority,
+                due_date: dueDate || null
+            };
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Створення...';
+
+            try {
+                const resp = await fetch(`${API_URL}/tasks`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await resp.json();
+                
+                if (resp.ok && data.success) {
+                    showToast(`✅ ${data.message} (ID: ${data.task_id})`, 'success');
+                    
+                    // Очищення форми
+                    document.getElementById('title').value = '';
+                    document.getElementById('desc').value = '';
+                    document.getElementById('dueDate').value = '';
+                    
+                    // Оновлення таблиці
+                    await loadTasks();
+                } else {
+                    const errorMsg = data.detail || data.message || 'Невідома помилка';
+                    showToast(`❌ Помилка: ${errorMsg}`, 'error');
+                }
+            } catch (e) {
+                showToast('❌ Сервер недоступний!', 'error');
+                console.error('Create task error:', e);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '➕ Додати завдання';
+            }
+        }
+
+        /**
+         * Відображення toast-повідомлення
+         */
+        function showToast(message, type = 'success') {
+            // Видалення попередніх повідомлень
+            document.querySelectorAll('.toast').forEach(t => t.remove());
+            
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            // Автоматичне приховування через 4 секунди
+            setTimeout(() => toast.remove(), 4000);
+        }
+
+        /**
+         * Форматування статусу для відображення
+         */
+        function formatStatus(status) {
+            const statusMap = {
+                'Pending': '⏳ Очікує',
+                'In_Progress': '🔄 В роботі',
+                'Completed': '✅ Завершено'
+            };
+            return statusMap[status] || status;
+        }
+
+        /**
+         * Генерація кнопок дій залежно від поточного статусу
+         */
+        function getActionButtons(taskId, status) {
+            if (status === 'Completed') {
+                return '<span class="completed-label">✓ Виконано</span>';
+            }
+            
+            const nextStatus = status === 'Pending' ? 'In_Progress' : 'Completed';
+            const btnText = status === 'Pending' ? '▶ Почати' : '✓ Завершити';
+            const btnClass = status === 'Pending' ? 'btn-start' : 'btn-complete';
+            
+            return `<button class="action-btn ${btnClass}" onclick="changeStatus(${taskId}, '${nextStatus}')">${btnText}</button>`;
+        }
+
+        /**
+         * Зміна статусу завдання через PATCH /tasks/{id}/status
+         */
+        async function changeStatus(taskId, newStatus) {
+            try {
+                const resp = await fetch(`${API_URL}/tasks/${taskId}/status?new_status=${newStatus}`, {
+                    method: 'PATCH'
+                });
+                
+                const data = await resp.json();
+                
+                if (resp.ok && data.success) {
+                    showToast(`✅ ${data.message}`, 'success');
+                    await loadTasks();
+                } else {
+                    showToast(`❌ Помилка: ${data.detail || data.message}`, 'error');
+                }
+            } catch (e) {
+                showToast('❌ Сервер недоступний!', 'error');
+                console.error('Change status error:', e);
+            }
+        }
+
+        /**
+         * Екранування HTML для безпеки
+         */
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Запуск ініціалізації при завантаженні сторінки
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
